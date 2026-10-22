@@ -38,7 +38,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pwsh -NoProfile -File ci/build-win-msvc.ps1
+      # the same starter script a human runs; it skips its own "pause"
+      # because the runner defines CI
+      - name: Build (MSVC x64 + Win32)
+        shell: cmd
+        run: build_windows.cmd
       - uses: actions/upload-artifact@v4
         with:
           name: win-msvc

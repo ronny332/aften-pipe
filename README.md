@@ -97,7 +97,7 @@ with every Windows NT since 1996; the plain build uses the modern
 Universal CRT that ships with Windows 10+. Both are ~230 KB.
 
 The two `-msvc-` builds come from Microsoft's own compiler
-(`ci/build-win-msvc.ps1`). They import no `VCRUNTIME140.dll` and no
+(`build_windows.cmd`). They import no `VCRUNTIME140.dll` and no
 `api-ms-win-crt-*` — the CRT is linked in, like every other asset here.
 x64 and i386 produce byte-identical streams (verified), and both sit 3
 bytes / 2 LSB away from the mingw builds, as described under *What
@@ -112,6 +112,11 @@ Three ways in; the first line of each is the one to copy.
 | POSIX (Linux, *BSD, macOS) | `cmake --build build -j` | `build/aften` |
 | Windows, Visual C++ | `cmake --build build --config Release` | `build\Release\aften.exe` |
 | cross `aften.exe` from Linux | `cmake --build build-win --target aften_exe -j` | `build-win/aften.exe` |
+
+Laziest path: `./build_linux.sh` on POSIX, and double-click
+`build_windows.cmd` on Windows. Both run the commands below with the
+flags that suit the platform, so you can read the details at your
+leisure.
 
 > **The Windows trap.** The Visual Studio generator is *multi-config*:
 > `-DCMAKE_BUILD_TYPE=Release` is accepted, cached, and **ignored**, and
@@ -164,10 +169,13 @@ cmake --build ..\aften-build --config Release    (-> ..\aften-build\Release\afte
 - `-DCMAKE_CONFIGURATION_TYPES=Release` makes a plain
   `cmake --build build -j` build Release on Windows, for the cases where
   you cannot add `--config`: a wrapper script, an IDE task, CI.
-- `build-win.cmd` in the repo root (double-click, or run it from a shell)
-  builds both bitnesses and puts versioned assets in `bin\`. It is a thin
-  wrapper around `ci\build-win-msvc.ps1`, which also takes `-Version` and
-  `-CMake <path to cmake.exe>` if your cmake is a shim that will not run.
+- `build_windows.cmd` in the repo root (double-click, or run it from
+  `cmd.exe`) is the lazy path: x64 and Win32 in one go, `/MT` so the
+  assets need no VC++ redistributable, versioned names in `bin\`.
+  Flags: `-64` / `-32` for one bitness, `-clean`, `-h`. It is plain
+  batch, no PowerShell anywhere, and it looks for the real `cmake.exe`
+  when your cmake on PATH is a launcher shim (scoop's shims cannot
+  spawn processes over ssh, in services, or in CI agents).
 - The VS *generator* finds the toolset through the registry, so no
   *Developer Prompt* / `vcvars64.bat` environment is needed; a plain
   `cmd.exe` works, and so does an ssh session.

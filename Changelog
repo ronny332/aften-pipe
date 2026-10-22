@@ -19,7 +19,15 @@ Aften TODO list
 
 Aften Changelog
 ---------------
-version SVN : current
+version 0.09pipe1 : current
+- added auto-detection of piped stdin (aften out.ac3 < in.wav works now)
+- documented pipe input/output via "-" in the usage/help text
+- fixed streamed WAV input from pipes (muxers writing 0xFFFFFFFF as
+  placeholder data size are now read to end-of-stream)
+- stdin/stdout are no longer fclose()d on exit
+- fixed memmove size in initial sample buffer when using -pad 0
+
+version SVN : 0.08 + git 89aee3d (SourceForge snapshot)
 - added Windows x64 support (tested with Visual Studio 2008)
 - added C# bindings with simple high level API
 - changed API to simplify its usage

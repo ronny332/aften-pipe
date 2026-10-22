@@ -45,9 +45,51 @@ Patches (see git log for the exact commits)
 5. libaften/a52.h, Changelog
    Version string: "git" -> "0.09pipe1".
 
+6. CMakeModules/DetectCompiler.cmake, CMakeLists.txt
+   Machine type detection, which blocked every native 64-bit Windows
+   build.  The 2011 code required CMAKE_SYSTEM_PROCESSOR to contain
+   "x86" when there is no uname, and 64-bit Windows reports
+   %PROCESSOR_ARCHITECTURE% = "AMD64", so MSVC x64 stopped with
+   "Could not detect machine type" at CMakeLists.txt:152.  Now:
+     - names are normalized case-insensitively (AMD64 / X86_64 / X64 /
+       X86 / I[3-6]86 -> x86, PPC / POWERPC / Power Macintosh -> ppc);
+     - 32-bit is told from 64-bit by the pointer size
+       (CMAKE_SIZEOF_VOID_P), the only reliable signal, since an
+       "AMD64"-reporting shell can be running a 32-bit compiler;
+     - ARM64 and any other CPU configure as portable C instead of
+       aborting the configure, because nothing outside the x86/PPC SIMD
+       blocks needs a machine type;
+     - the host uname is ignored when cross-compiling, and an
+       MSYS/WSL uname (which names the OS, "MSYS_NT-10.0-...") falls
+       back to the processor CMake reports;
+     - EXEC_PROGRAM, deprecated since CMake 3.27, became
+       EXECUTE_PROCESS.
+   Build system only; the encoder is untouched.
+
 Verification
 ------------
 Pipe encodes (stdin, ffmpeg streaming pipe, stdout, 24-bit) are
 byte-identical to the file-based encodes of the same audio, and to the
 upstream encoder's output (single-threaded CBR; the encoder core is
 unmodified, this just proves the I/O paths are lossless).
+
+Windows (Windows 11 x64, MSVC 19.51 from VS 2026 BuildTools, CMake
+4.4.4):
+  - x64 and Win32 both configure -- "Machine type: x86_64" / "i386" --
+    and build.  MMX is correctly off in x64 (MSVC has no __m64 there)
+    and on in Win32, where the Intel-syntax inline-asm CPU detection is
+    the code path that runs.
+  - file, pipe (cmd "type" | aften -), 24-bit input, -threads 1..16,
+    -nosimd, /MD and /MT, x64 and i386: every encode of one 5 s stereo
+    input produced the same 240384 bytes with the same MD5.
+  - MSVC and gcc encodes of the same audio differ in 3 of 240384
+    bytes, all of them in frames 364-365.  The DC/bandwidth/LFE filter
+    coefficients are computed at runtime with cos/sqrt from libm, and
+    the MSVC CRT and glibc round in the last ULP; decoded with ffmpeg
+    the streams are within 2 LSB of 16-bit, on 0.03% of the samples.
+    Byte-identity claims are therefore per-compiler, not across
+    toolchains.
+
+Linux (x86_64, gcc, CMake 4.4.4): unchanged -- "Machine type: x86_64",
+MMX/SSE/SSE2/SSE3 detected, output identical to the released
+0.09pipe1 binary.

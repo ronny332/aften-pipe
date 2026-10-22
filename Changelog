@@ -26,6 +26,13 @@ version 0.09pipe1 : current
   placeholder data size are now read to end-of-stream)
 - stdin/stdout are no longer fclose()d on exit
 - fixed memmove size in initial sample buffer when using -pad 0
+- cmake: detect the machine type on 64-bit Windows (a native MSVC x64
+  build stopped with "Could not detect machine type", because the 2011
+  check only matched "x86" and 64-bit Windows reports "AMD64"); 32/64
+  bits are now told apart by the pointer size, ARM64 and unknown CPUs
+  build portable C instead of aborting the configure
+- added MSVC build instructions and ci/build-win-msvc.ps1 (x64 + i386,
+  CRT linked in); CI now builds them on windows-latest
 
 version SVN : 0.08 + git 89aee3d (SourceForge snapshot)
 - added Windows x64 support (tested with Visual Studio 2008)

@@ -38,11 +38,23 @@ old-school static binaries for Windows (XP+) and Linux.
 | `opts: auto-detect piped stdin` | `aften/opts.c`: if no input filename is given and stdin is not a terminal, stdin is used. `ffmpeg … \| aften out.ac3` and `aften out.ac3 < in.wav` work. |
 | `aften: fix short-stream padding copy, do not fclose stdin/stdout` | `aften/aften.c`: a `memmove` copied bytes instead of samples (visible with `-pad 0` on short streams); `stdin`/`stdout` are no longer `fclose()`d (MSVC debug CRT abort). |
 | `helptext: document pipe/stdin/stdout usage` | `aften/helptext.h`: pipe input/output has existed in aften **since 2006**, it was just never mentioned in the help text. |
+| `cmake: detect machine type on 64-bit Windows` | `CMakeModules/DetectCompiler.cmake`: the 2011 check demanded that `CMAKE_SYSTEM_PROCESSOR` contain `x86`, and 64-bit Windows reports `AMD64`, so every native MSVC build stopped with *"Could not detect machine type"*. Windows x64 and 32-bit now configure (bitness taken from the pointer size, which is the only thing that can tell them apart), unknown CPUs build portable C instead of aborting the configure, and the host `uname` is no longer trusted when cross-compiling. Verified with VS 2026 BuildTools (MSVC 19.51): x64 and Win32 both build and encode. |
 | `version 0.09pipe1` | version string, Changelog. |
 
 The encoder core, bitstream output, SIMD code and the C/C++/C# API are
 **bit-for-bit unchanged**. Encodes from these builds are byte-identical
 to the original through pipes, files, and stdout.
+
+> **One nuance about "byte-identical".** It holds *within* a toolchain.
+> Measured on a 5-second stereo 48 kHz encode (375 frames, 240 384 bytes):
+> MSVC x64, MSVC Win32, `-threads 1…16` and `-nosimd` all produce the same
+> bytes; the gcc builds (Linux, mingw) agree with each other. MSVC and gcc
+> differ by 3 bytes, all inside frames 364-365, because the DC/bandwidth/LFE
+> filter coefficients are computed at runtime with `cos`/`sqrt` from
+> `libm`, and the two libraries round in the last ULP. Decoded, the two
+> streams are within 2 LSB of 16-bit (≈ −96 dB), on 0.03 % of the samples.
+> So comparing MD5s across compilers is meaningless; comparing them across
+> pipes and files with the same binary is exactly the right test.
 
 ## Usage
 
@@ -76,11 +88,20 @@ Release assets (all fully static, no redistributables, no installer):
 |---|---|---|
 | `aften-0.09pipe1-win32.exe` | Windows, 32-bit | Windows 7 (needs the free UCRT update KB2999226), 8.1, 10, 11 — 32- and 64-bit |
 | `aften-0.09pipe1-win32-xp.exe` | Windows, 32-bit, **`msvcrt.dll` runtime** | Windows XP / 2003 and newer — the true old-school binary |
+| `aften-0.09pipe1-msvc-x64.exe` | Windows, 64-bit, MSVC, **CRT linked in** (`/MT`, 331 KB) | Windows 10 / 11 x64; on Win 7 / 8.1 the UCRT update is expected to be needed, untested |
+| `aften-0.09pipe1-msvc-i386.exe` | Windows, 32-bit, MSVC, **CRT linked in** (`/MT`, 276 KB) | 32- and 64-bit Windows; no VC++ redistributable |
 | `aften-0.09pipe1-linux-x86_64` | Linux, x86_64, static | any distribution (built against glibc 2.28, fully static) |
 
 The `-xp` build links against `msvcrt.dll`, the C runtime that ships
 with every Windows NT since 1996; the plain build uses the modern
 Universal CRT that ships with Windows 10+. Both are ~230 KB.
+
+The two `-msvc-` builds come from Microsoft's own compiler
+(`ci/build-win-msvc.ps1`). They import no `VCRUNTIME140.dll` and no
+`api-ms-win-crt-*` — the CRT is linked in, like every other asset here.
+x64 and i386 produce byte-identical streams (verified), and both sit 3
+bytes / 2 LSB away from the mingw builds, as described under *What
+changed*.
 
 ## Building
 
@@ -106,14 +127,45 @@ The flags: the tree predates CMake 3 (`POLICY_VERSION_MINIMUM`), gcc ≥
 pins the compiler to the C dialect of the era. The source is kept in
 its original C99-flavored style on purpose.
 
+Native Windows build (Visual Studio 2017+ or Build Tools, C++ workload):
+
+```bat
+cmake -S . -B ..\aften-build -G "Visual Studio 18 2026" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build ..\aften-build --config Release    (-> ..\aften-build\Release\aften.exe)
+```
+
+- Use `-A Win32` for a 32-bit build. MMX is off in x64 (MSVC has no
+  `__m64` there), SSE/SSE2/SSE3 are on; both bitnesses produce the same
+  stream. The 32-bit build is the only one that compiles the Intel-syntax
+  inline-asm CPU detection — MSVC x64 uses the `__cpuid` intrinsic.
+- `build-win.cmd` in the repo root (double-click, or run it from a shell)
+  builds both bitnesses and puts versioned assets in `bin\`. It is a thin
+  wrapper around `ci\build-win-msvc.ps1`, which also takes `-Version` and
+  `-CMake <path to cmake.exe>` if your cmake is a shim that will not run.
+- The VS *generator* finds the toolset through the registry, so no
+  *Developer Prompt* / `vcvars64.bat` environment is needed; a plain
+  `cmd.exe` works, and so does an ssh session.
+- Older trees: run the configure from `cmd.exe`, not from Git-Bash/MSYS2,
+  whose `uname -m` answers `MSYS_NT-10.0-…` (an OS name, not a CPU) —
+  the 2011 machine check then silently configured **without SIMD**. This
+  tree falls back to the CPU CMake reports, so it copes with both.
+- In **PowerShell**, quote options that carry a dot: `"-DCMAKE_POLICY_VERSION_MINIMUM=3.5"`.
+  Unquoted, PowerShell splits that argument into `3` and `.5`, and CMake
+  answers `Invalid CMAKE_POLICY_VERSION_MINIMUM value "3"`. `cmd.exe`,
+  which the example above uses, is not affected.
+- With the released `0.09pipe1` sources (before the machine-type fix),
+  add `set PROCESSOR_ARCHITECTURE=x86` before the configure line, and
+  64-bit MSVC will configure.
+
 Containerized cross builds (podman/docker, reproduce the release assets):
 
 ```sh
 ci/build-all.sh        # UCRT build from the host, XP + Linux builds in containers
 ```
 
-CI: `.github/workflows/build.yml` builds all three assets on tag push
-and publishes them to the GitHub Release.
+CI: `.github/workflows/build.yml` builds all the assets on tag push
+(win32 UCRT, win32 msvcrt/XP, MSVC x64 + i386, Linux static) and
+publishes them to the GitHub Release.
 
 ## License
 

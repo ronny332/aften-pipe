@@ -25,12 +25,23 @@
 #ifndef HELPTEXT_H
 #define HELPTEXT_H
 
-static const char *usage_heading = "usage: aften [options] <input.wav> <output.ac3>\n";
+static const char *usage_heading =
+    "usage: aften [options] <input.wav|-> <output.ac3|->\n"
+    "       use \"-\" as filename to read from stdin / write to stdout\n";
 
-#define HELP_OPTIONS_COUNT 43
+#define HELP_OPTIONS_COUNT 44
 
 static const char *help_options[HELP_OPTIONS_COUNT] = {
 "    [-h]           Print out list of commandline options\n",
+
+"    [input]        Use \"-\" as input filename to read audio from piped\n"
+"                       stdin, \"-\" as output filename to write the AC-3\n"
+"                       stream to stdout.  On Windows both streams are\n"
+"                       switched to binary mode automatically.  If no\n"
+"                       input filename is given and stdin is piped,\n"
+"                       stdin is used as input automatically.\n"
+"                       For streamed WAV input (unknown data size), use\n"
+"                       -readtoeof 1.\n",
 
 "    [-longhelp]    Print out commandline option details\n",
 
@@ -409,7 +420,7 @@ static const char *drc_options[DRC_OPTIONS_COUNT] = {
 "                       -31dB.\n"
 };
 
-#define INPUT_OPTIONS_COUNT 10
+#define INPUT_OPTIONS_COUNT 11
 
 static const char input_heading[17] = "INPUT OPTIONS\n";
 static const char *input_options[INPUT_OPTIONS_COUNT] = {
@@ -422,6 +433,19 @@ static const char *input_options[INPUT_OPTIONS_COUNT] = {
 "    interpretation of the input, so no downmixing or upmixing is done.  The\n"
 "    readtoeof option overrides the header and lets the user specify that Aften\n"
 "    should keep reading data until the end-of-file.\n",
+
+"    [input/output] Piped I/O\n"
+"                       Using \"-\" as the input filename reads the audio\n"
+"                       from stdin, using \"-\" as the output filename\n"
+"                       writes the AC-3 stream to stdout.  This allows\n"
+"                       encoding from a pipe, e.g.:\n"
+"                           ffmpeg -i in.wav -f wav - | aften - out.ac3\n"
+"                       If no input filename is given and stdin is a\n"
+"                       pipe, stdin is used automatically.  Piped input\n"
+"                       is not seekable; streamed WAV headers with an\n"
+"                       unknown data size are detected and read to the\n"
+"                       end of the stream.  Piped input can only be used\n"
+"                       as a single input, not with the -ch_X options.\n",
 
 "    [-acmod #]     Audio coding mode (overrides wav header)\n"
 "                       0 = 1+1 (Ch1,Ch2)\n"

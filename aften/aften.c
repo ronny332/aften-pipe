@@ -275,7 +275,8 @@ main(int argc, char **argv)
         nr = pcm_read_samples(&pf, fwav, 256);
         diff = 256 - nr;
         if (diff > 0) {
-            memmove(fwav + diff * s.channels, fwav, nr);
+            memmove(fwav + diff * s.channels, fwav,
+                    (size_t)nr * s.channels * sizeof(FLOAT));
             memset(fwav, 0, diff * s.channels * sizeof(FLOAT));
         }
         if (aften_remap)
@@ -371,10 +372,10 @@ end:
 
         pcm_close(&pf);
     for (i = 0; i < opts.num_input_files; i++) {
-        if (ifp[i])
+        if (ifp[i] && ifp[i] != stdin)
             fclose(ifp[i]);
     }
-    if (ofp)
+    if (ofp && ofp != stdout)
         fclose(ofp);
 
     if (aften_encode_close(&s))

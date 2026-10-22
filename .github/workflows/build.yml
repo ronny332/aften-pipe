@@ -1,0 +1,62 @@
+name: build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  win32-ucrt:
+    name: Windows (UCRT, Win7+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-i686 cmake
+      - run: sh ci/build-win32-ucrt.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win32-ucrt
+          path: bin/*.exe
+
+  win32-msvcrt:
+    name: Windows (msvcrt.dll, XP+)
+    runs-on: ubuntu-latest
+    container: debian:11-slim
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh ci/build-win32-msvcrt.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win32-msvcrt
+          path: bin/*.exe
+
+  linux-static:
+    name: Linux (static)
+    runs-on: ubuntu-latest
+    container: debian:10-slim
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh ci/build-linux-static.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-static
+          path: bin/aften-*-linux-*
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [win32-ucrt, win32-msvcrt, linux-static]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

@@ -1,0 +1,53 @@
+aften 0.09pipe1 - change notes
+==============================
+
+Base: upstream aften, SourceForge git snapshot 89aee3d (Jan 2011,
+"0.08 + git"), kept byte-identical.  The encoder, the bitstream, the
+API and the PCM library are untouched; the handful of fixes below are
+all that this fork adds.  Upstream authorship (Justin Ruggles, Prakash
+Punnoor, et al.) is preserved in the file headers and in git history.
+
+This is a personal, for-fun build for continued use of a great little
+tool.  Upstream has been quiet since 2011, so this is not an attempt
+to take over anything, and there is nothing to credit to anyone here.
+
+Patches (see git log for the exact commits)
+-------------------------------------------
+1. pcm/wav.c  (wave_init)
+   Streaming muxers (FFmpeg et al.) write 0xFFFFFFFF as placeholder
+   data chunk size when the output is a pipe.  That value read into an
+   int is -1, which sign-extends into a bogus data_size of
+   0xFFFFFFFFFFFFFFFF when assigned to the 64-bit field; the derived
+   sample count overflowed into nonsense (broken progress display).
+   On non-seekable input the placeholder is now treated as
+   size-unknown: read to end-of-stream.  Streamed WAV input works
+   without -readtoeof 1.
+
+2. aften/opts.c
+   stdin is auto-detected: if no input filename is given and stdin is
+   not a terminal, "-" is used as input:
+       ffmpeg -i in.wav -f wav - | aften out.ac3
+       aften out.ac3 < in.wav
+   Explicit "aften - out.ac3" works as it has since 2006.
+
+3. aften/aften.c
+   - stdin/stdout are no longer fclose()d on exit (MSVC debug CRT
+     aborts on the second close at process teardown).
+   - fixed memmove size when -pad 0 and the stream is shorter than
+     256 samples (copied nr bytes instead of nr*channels*sizeof(FLOAT)).
+
+4. aften/helptext.h
+   Usage and longhelp document pipe I/O ("-" filenames).  Pipe input
+   and output existed in aften since 2006 but were never mentioned in
+   the help text anywhere, which is the reason the tool is widely
+   believed to lack the feature.
+
+5. libaften/a52.h, Changelog
+   Version string: "git" -> "0.09pipe1".
+
+Verification
+------------
+Pipe encodes (stdin, ffmpeg streaming pipe, stdout, 24-bit) are
+byte-identical to the file-based encodes of the same audio, and to the
+upstream encoder's output (single-threaded CBR; the encoder core is
+unmodified, this just proves the I/O paths are lossless).

@@ -33,6 +33,17 @@ jobs:
           name: win32-msvcrt
           path: bin/*.exe
 
+  win-msvc:
+    name: Windows (MSVC, x64 + i386)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pwsh -NoProfile -File ci/build-win-msvc.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-msvc
+          path: bin/aften-*-msvc-*.exe
+
   linux-static:
     name: Linux (static)
     runs-on: ubuntu-latest
@@ -48,7 +59,7 @@ jobs:
   release:
     name: Publish release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [win32-ucrt, win32-msvcrt, linux-static]
+    needs: [win32-ucrt, win32-msvcrt, win-msvc, linux-static]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -7,12 +7,21 @@ old-school static binaries for Windows (XP+) and Linux.
 > **Whose work this is.** The encoder, the PCM/WAV reader, the SIMD
 > kernels, the API — essentially all 15,000 lines — are the work of
 > **Justin Ruggles, Prakash Punnoor, and the other aften contributors**
-> (2006–2011, upstream:
-> [aften on SourceForge](https://aften.sourceforge.net/)).
-> This repository is a faithful copy of their tree with ~100 lines of
-> small fixes on top. The authorship of everything that matters — the
-> encoder — is untouched and stays where it belongs. The extra patches
-> are a drop in the ocean; consider them public domain and uncredited.
+> (2006–2011). Canonical upstream:
+> [aften.sourceforge.net](https://aften.sourceforge.net/) (git
+> `89aee3d`), which is the tree this fork was built from.
+> The author's own GitHub mirror,
+> [github.com/justinruggles/aften](https://github.com/justinruggles/aften),
+> was discovered **after** this build was made — it carries the
+> identical 886-commit history, imported 2020 and dormant since; no
+> pull request is intended, and this repo asks for nothing. It exists
+> for joy and for the people who are happily still using this little
+> tool.
+> This repository is a faithful copy of the upstream tree with ~100
+> lines of small fixes on top. The authorship of everything that
+> matters — the encoder — is untouched and stays where it belongs. The
+> extra patches are a drop in the ocean; consider them public domain
+> and uncredited.
 
 > **Why a fork, why "for fun"?** Upstream has been quiet since 2011.
 > The SourceForge tree is frozen and a pull request would, in all

@@ -160,6 +160,15 @@ wave_init(PcmFile *pf)
                 if (chunksize == 0)
                     pf->read_to_eof = 1;
                 pf->data_size = chunksize;
+                if (pf->data_size == (uint64_t)-1) {
+                    // streaming muxers (e.g. FFmpeg) write 0xFFFFFFFF as a
+                    // placeholder data size.  when the input is not seekable,
+                    // the size is unknown, so read until end-of-file.
+                    if (!pf->seekable) {
+                        pf->read_to_eof = 1;
+                        pf->data_size = 0;
+                    }
+                }
                 pf->data_start = pf->filepos;
                 if (pf->seekable && pf->file_size > 0) {
                     // limit data size to end-of-file

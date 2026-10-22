@@ -29,4 +29,3 @@ cmake --build . --target aften_exe -j"$(nproc)" > /dev/null
 cp aften.exe "../bin/aften-$VER-win32-xp.exe"
 # runtime sanity: must import msvcrt.dll and NO api-ms-win-crt-*
 i686-w64-mingw32-objdump -p "../bin/aften-$VER-win32-xp.exe" | grep 'DLL Name'
-file "../bin/aften-$VER-win32-xp.exe"

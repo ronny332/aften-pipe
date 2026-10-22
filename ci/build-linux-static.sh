@@ -22,6 +22,6 @@ cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
          -DCMAKE_EXE_LINKER_FLAGS="-static -s" \
          -DSHARED=OFF > /dev/null
-cmake --build . --target aften_exe -j"$(nproc)" > /dev/null
+cmake --build . --target aften_exe -- -j"$(nproc)" > /dev/null
 cp aften "../bin/aften-$VER-linux-x86_64"
 file "../bin/aften-$VER-linux-x86_64"

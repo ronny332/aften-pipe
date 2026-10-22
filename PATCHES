@@ -1,4 +1,4 @@
-aften 0.09pipe1 - change notes
+aften 0.09pipe2 - change notes
 ==============================
 
 Base: upstream aften, SourceForge git snapshot 89aee3d (Jan 2011,
@@ -43,7 +43,7 @@ Patches (see git log for the exact commits)
    believed to lack the feature.
 
 5. libaften/a52.h, Changelog
-   Version string: "git" -> "0.09pipe1".
+   Version string: "git" -> "0.09pipe2".
 
 6. CMakeModules/DetectCompiler.cmake, CMakeLists.txt
    Machine type detection, which blocked every native 64-bit Windows

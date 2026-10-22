@@ -39,7 +39,7 @@ old-school static binaries for Windows (XP+) and Linux.
 | `aften: fix short-stream padding copy, do not fclose stdin/stdout` | `aften/aften.c`: a `memmove` copied bytes instead of samples (visible with `-pad 0` on short streams); `stdin`/`stdout` are no longer `fclose()`d (MSVC debug CRT abort). |
 | `helptext: document pipe/stdin/stdout usage` | `aften/helptext.h`: pipe input/output has existed in aften **since 2006**, it was just never mentioned in the help text. |
 | `cmake: detect machine type on 64-bit Windows` | `CMakeModules/DetectCompiler.cmake`: the 2011 check demanded that `CMAKE_SYSTEM_PROCESSOR` contain `x86`, and 64-bit Windows reports `AMD64`, so every native MSVC build stopped with *"Could not detect machine type"*. Windows x64 and 32-bit now configure (bitness taken from the pointer size, which is the only thing that can tell them apart), unknown CPUs build portable C instead of aborting the configure, and the host `uname` is no longer trusted when cross-compiling. Verified with VS 2026 BuildTools (MSVC 19.51): x64 and Win32 both build and encode. |
-| `version 0.09pipe1` | version string, Changelog. |
+| `version 0.09pipe2` | version string, Changelog. |
 
 The encoder core, bitstream output, SIMD code and the C/C++/C# API are
 **bit-for-bit unchanged**. Encodes from these builds are byte-identical
@@ -86,11 +86,11 @@ Release assets (all fully static, no redistributables, no installer):
 
 | File | Platform | Runs on |
 |---|---|---|
-| `aften-0.09pipe1-win32.exe` | Windows, 32-bit | Windows 7 (needs the free UCRT update KB2999226), 8.1, 10, 11 — 32- and 64-bit |
-| `aften-0.09pipe1-win32-xp.exe` | Windows, 32-bit, **`msvcrt.dll` runtime** | Windows XP / 2003 and newer — the true old-school binary |
-| `aften-0.09pipe1-msvc-x64.exe` | Windows, 64-bit, MSVC, **CRT linked in** (`/MT`, 331 KB) | Windows 10 / 11 x64; on Win 7 / 8.1 the UCRT update is expected to be needed, untested |
-| `aften-0.09pipe1-msvc-i386.exe` | Windows, 32-bit, MSVC, **CRT linked in** (`/MT`, 276 KB) | 32- and 64-bit Windows; no VC++ redistributable |
-| `aften-0.09pipe1-linux-x86_64` | Linux, x86_64, static | any distribution (built against glibc 2.28, fully static) |
+| `aften-0.09pipe2-win32.exe` | Windows, 32-bit | Windows 7 (needs the free UCRT update KB2999226), 8.1, 10, 11 — 32- and 64-bit |
+| `aften-0.09pipe2-win32-xp.exe` | Windows, 32-bit, **`msvcrt.dll` runtime** | Windows XP / 2003 and newer — the true old-school binary |
+| `aften-0.09pipe2-msvc-x64.exe` | Windows, 64-bit, MSVC, **CRT linked in** (`/MT`, 331 KB) | Windows 10 / 11 x64; on Win 7 / 8.1 the UCRT update is expected to be needed, untested |
+| `aften-0.09pipe2-msvc-i386.exe` | Windows, 32-bit, MSVC, **CRT linked in** (`/MT`, 276 KB) | 32- and 64-bit Windows; no VC++ redistributable |
+| `aften-0.09pipe2-linux-x86_64` | Linux, x86_64, static | any distribution (built against glibc 2.28, fully static) |
 
 The `-xp` build links against `msvcrt.dll`, the C runtime that ships
 with every Windows NT since 1996; the plain build uses the modern

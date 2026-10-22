@@ -19,13 +19,7 @@ Aften TODO list
 
 Aften Changelog
 ---------------
-version 0.09pipe1 : current
-- added auto-detection of piped stdin (aften out.ac3 < in.wav works now)
-- documented pipe input/output via "-" in the usage/help text
-- fixed streamed WAV input from pipes (muxers writing 0xFFFFFFFF as
-  placeholder data size are now read to end-of-stream)
-- stdin/stdout are no longer fclose()d on exit
-- fixed memmove size in initial sample buffer when using -pad 0
+version 0.09pipe2 : current
 - cmake: detect the machine type on 64-bit Windows (a native MSVC x64
   build stopped with "Could not detect machine type", because the 2011
   check only matched "x86" and 64-bit Windows reports "AMD64"); 32/64
@@ -36,6 +30,14 @@ version 0.09pipe1 : current
 - added starter scripts: build_linux.sh and build_windows.cmd (plain
   cmd.exe, no PowerShell), plus .gitattributes so a clone is runnable
   on whichever platform it lands on
+
+version 0.09pipe1
+- added auto-detection of piped stdin (aften out.ac3 < in.wav works now)
+- documented pipe input/output via "-" in the usage/help text
+- fixed streamed WAV input from pipes (muxers writing 0xFFFFFFFF as
+  placeholder data size are now read to end-of-stream)
+- stdin/stdout are no longer fclose()d on exit
+- fixed memmove size in initial sample buffer when using -pad 0
 
 version SVN : 0.08 + git 89aee3d (SourceForge snapshot)
 - added Windows x64 support (tested with Visual Studio 2008)

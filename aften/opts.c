@@ -30,8 +30,29 @@
 #include <string.h>
 #include <stddef.h>
 
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "opts.h"
 #include "pcm.h"
+
+/**
+ * Returns non-zero if stdin is connected to a pipe/redirect instead of a
+ * interactive terminal.
+ */
+static int
+stdin_is_piped(void)
+{
+#ifdef _WIN32
+    return !_isatty(_fileno(stdin));
+#else
+    return !isatty(fileno(stdin));
+#endif
+}
 
 typedef struct PrivateOptions {
     int found_output;
@@ -476,6 +497,15 @@ parse_commandline(int argc, char **argv, CommandOptions *opts)
                 fprintf(stderr, "too many empty parameters\n");
                 return 1;
             }
+        }
+    }
+
+    // if no input file was given, use stdin when it is piped/redirected
+    if (!priv.single_input && !priv.multi_input) {
+        if (priv.found_output && stdin_is_piped()) {
+            opts->infile[0] = "-";
+            opts->num_input_files = 1;
+            priv.single_input = 1;
         }
     }
 

@@ -105,6 +105,29 @@ changed*.
 
 ## Building
 
+Three ways in; the first line of each is the one to copy.
+
+| platform | build step | result |
+|---|---|---|
+| POSIX (Linux, *BSD, macOS) | `cmake --build build -j` | `build/aften` |
+| Windows, Visual C++ | `cmake --build build --config Release` | `build\Release\aften.exe` |
+| cross `aften.exe` from Linux | `cmake --build build-win --target aften_exe -j` | `build-win/aften.exe` |
+
+> **The Windows trap.** The Visual Studio generator is *multi-config*:
+> `-DCMAKE_BUILD_TYPE=Release` is accepted, cached, and **ignored**, and
+> `cmake --build build` then builds the first entry of
+> `CMAKE_CONFIGURATION_TYPES` — which is **Debug**: `/Od`, intrinsics not
+> inlined, every `assert()` in `libaften/` live, several times slower.
+> Nothing warns you, because this is a 2011-era CMake file. Add
+> `--config Release`, or pin the list once at configure time with
+> `-DCMAKE_CONFIGURATION_TYPES=Release` (MSBuild takes the first entry
+> when no `--config` is given). The arithmetic is the same in Debug —
+> x64 uses SSE2 either way — plus the assertions, which abort, so Debug
+> can die on input that Release silently encodes. Single-config
+> generators (Makefiles, Ninja — everything on Linux) honour
+> `CMAKE_BUILD_TYPE` and have no such footgun; `--config` is ignored
+> there.
+
 Native (any POSIX):
 
 ```sh
@@ -138,6 +161,9 @@ cmake --build ..\aften-build --config Release    (-> ..\aften-build\Release\afte
   `__m64` there), SSE/SSE2/SSE3 are on; both bitnesses produce the same
   stream. The 32-bit build is the only one that compiles the Intel-syntax
   inline-asm CPU detection — MSVC x64 uses the `__cpuid` intrinsic.
+- `-DCMAKE_CONFIGURATION_TYPES=Release` makes a plain
+  `cmake --build build -j` build Release on Windows, for the cases where
+  you cannot add `--config`: a wrapper script, an IDE task, CI.
 - `build-win.cmd` in the repo root (double-click, or run it from a shell)
   builds both bitnesses and puts versioned assets in `bin\`. It is a thin
   wrapper around `ci\build-win-msvc.ps1`, which also takes `-Version` and

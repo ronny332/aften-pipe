@@ -1,0 +1,10 @@
+# Line endings, so a clone is runnable on the platform it lands on:
+#  - cmd.exe is fussy about LF batch files
+#  - bash refuses a "#!/bin/sh\r" shebang
+# Without this, a Windows clone with core.autocrlf=true gets a CRLF
+# build_linux.sh, and a Linux clone with autocrlf=input can get an LF
+# build_windows.cmd.
+* text=auto
+*.sh text eol=lf
+*.cmd text eol=crlf
+CMakeCache.txt text eol=lf

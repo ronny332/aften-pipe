@@ -31,8 +31,11 @@ version 0.09pipe1 : current
   check only matched "x86" and 64-bit Windows reports "AMD64"); 32/64
   bits are now told apart by the pointer size, ARM64 and unknown CPUs
   build portable C instead of aborting the configure
-- added MSVC build instructions and ci/build-win-msvc.ps1 (x64 + i386,
-  CRT linked in); CI now builds them on windows-latest
+- added MSVC build instructions (x64 + i386, CRT linked in) and a
+  windows-latest CI job that builds them
+- added starter scripts: build_linux.sh and build_windows.cmd (plain
+  cmd.exe, no PowerShell), plus .gitattributes so a clone is runnable
+  on whichever platform it lands on
 
 version SVN : 0.08 + git 89aee3d (SourceForge snapshot)
 - added Windows x64 support (tested with Visual Studio 2008)
